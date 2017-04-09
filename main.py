@@ -6,6 +6,7 @@ TextureRecognize - GUI
 @author: zhengxiaoyao0716
 """
 
+from threading import Thread
 from functools import reduce
 from sys import stdout
 
@@ -98,16 +99,17 @@ def main():
 
     def mark_tags(weights):
         """标注全部目标选框"""
-        drawer = ImageDraw.Draw(image)
+        new_image = image.copy()
+        drawer = ImageDraw.Draw(new_image)
         print('\n标注目标选框：')
-        features = [
+        features = (
             rgb_far_feature,
             rgb_rare_feature,
             far_pos_features.group_num,
             far_pos_features.block_ratio,
             rare_pos_features.group_num,
             rare_pos_features.block_ratio,
-        ]
+        )
         is_tag = lambda xy: reduce(
             lambda l, r: l + weights[r] * features[r].weight(xy),
             range(len(features)), 0
@@ -133,10 +135,8 @@ def main():
                 for x in range(max(0, xy[0] - 30), min(width, xy[0] + 30)):
                     for y in range(max(0, xy[1] - 30), min(height, xy[1] + 30)):
                         if (x, y) not in visited and is_tag((x, y)):
-                            visited[(x, y)] = True
                             stack.append((x, y))
                         visited[(x, y)] = True
-
             x0, y0, x1, y1 = (
                 max(0, x0 - 10),
                 max(0, y0 - 10),
@@ -146,6 +146,9 @@ def main():
             for x in range(x0, x1):
                 for y in range(y0, y1):
                     visited[(x, y)] = True
+            # 去噪点
+            if (x0 - x1) * (y0 - y1) < 1600:
+                return
             # print(x0, y0, x1, y1)
             for ex in range(3):
                 drawer.rectangle(
@@ -154,8 +157,40 @@ def main():
         pix_iter(lambda xy, rgb: mark_tag(xy) if
                  is_tag(xy) and xy not in visited else None)
         print_progress('OK')
-    mark_tags(weights=[0.1, 0.1, 0.4, 0.4, 0, 0])
-    image.show()
+        Thread(target=new_image.show, name=path).start()
+    default_weights = {
+        # 各图片分别的系数组
+        '02': (0.2, 0.2, 0.0, 0.0, 0.3, 0.2),  # bad
+        '03': (0.1, 0.1, 0.4, 0.4, 0, 0),
+        '04': (0.1, 0.1, 0.3, 0.3, 0.1, 0.1),
+        '05': None,
+        '06': None,
+        '07': None,
+        '08': None,
+        '09': None,
+        '10': None,
+        '11': None,
+        '12': None,
+        '13': None,
+    }.get(path[
+        1 + path.rindex('/') if '/' in path else 0:
+        path.rindex('.bmp') if '.bmp' in path else None
+    ]) or (0.1, 0.1, 0.2, 0.2, 0.2, 0.2)
+    while True:
+        line = input('\n请输入系数组（默认为%r）\n' % (default_weights,))
+        if line == '':
+            weights = default_weights
+        else:
+            try:
+                weights = tuple(float(w.strip()) for w in line.split(','))
+            except IOError:
+                print('无效的输入')
+        if len(weights) >= 6:
+            print('当前系数组：%r' % (weights,))
+            mark_tags(weights)
+        else:
+            print('系数组长度至少为6')
+
 
 if __name__ == '__main__':
     main()
