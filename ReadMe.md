@@ -2,7 +2,7 @@
 ## 模式识别大作业
 
 ***
-### 流程设计
+### 理论设计
 
 本次大作页里，我从每个像素的RGB、该像素点相对周边像素的关系两方面，选择了几个基础的特征，分别计算该特征方面某个像素点的“权重”。在此基础上，通过组合这些权重构造出一个，描述某个像素点属于目标的概率的表达式。通过调整这个表达式中各特征占比，找到最佳的检测出对象目标的系数组。
 
@@ -31,18 +31,94 @@
 
 说实话这是个半成品，最后完成的结果说实话不尽人意，识别率有点糟糕。主要问题还是特征之间的组合太少，也没有足够的时间慢慢调整系数，而且另一方面，现在各个特征之间其实只简单组合了一层，没有多层神经元之间的繁杂组合，最终判别也是一个简单的一次方程组，实际上各特征与目标的关系也有可能是次方甚至指数关系等，这些都没有纳入考虑，所以效果很差。综上，我觉得我的这个设计本身还是不错的，如果能有足够的训练样本和时间的话。。。
 
+
 ### 成果展示
 
-![（相对平均值）偏远度](./screenshuts/RgbFarFeature.png)
+各中间特征等高图详见`out`目录
 
-![（相对众数）稀有度](./screenshuts/RgbRareFeature.png)
+01
+![01](./out/01/result-weight.jpg)
+![01](./out/01/result-marked.jpg)
 
-![基于偏远度的连通组内的像素点数量的特征](./screenshuts/PosGroupNumFeature_Far.png)
+02
+![02](./out/02/result-weight.jpg)
+![02](./out/02/result-marked.jpg)
 
-![基于偏远度边界点数量与组内数量比例特征](./screenshuts/PosBlockRatioFeature_Far.png)
+03
+![03](./out/03/result-weight.jpg)
+![03](./out/03/result-marked.jpg)
 
-![基于稀有度的连通组内的像素点数量的特征](./screenshuts/PosGroupNumFeature_Rare.png)
+04
+![04](./out/04/result-weight.jpg)
+![04](./out/04/result-marked.jpg)
 
-![基于稀有度边界点数量与组内数量比例特征](./screenshuts/PosBlockRatioFeature_Rare.png)
+05
+![05](./out/05/result-weight.jpg)
+![05](./out/05/result-marked.jpg)
 
-![03.bmp的检测结果](./screenshuts/Result-03.bmp)
+06
+![06](./out/06/result-weight.jpg)
+![06](./out/06/result-marked.jpg)
+
+07
+![07](./out/07/result-weight.jpg)
+![07](./out/07/result-marked.jpg)
+
+08
+![08](./out/08/result-weight.jpg)
+![08](./out/08/result-marked.jpg)
+
+09
+![09](./out/09/result-weight.jpg)
+![09](./out/09/result-marked.jpg)
+
+10
+![10](./out/10/result-weight.jpg)
+![10](./out/10/result-marked.jpg)
+
+11
+![11](./out/11/result-weight.jpg)
+![11](./out/11/result-marked.jpg)
+
+12
+![12](./out/12/result-weight.jpg)
+![12](./out/12/result-marked.jpg)
+
+13
+![13](./out/13/result-weight.jpg)
+![13](./out/13/result-marked.jpg)
+
+
+### 结论及验证
+
+`RgbFar`与`RgbRare`特征的表述能力对比：
+
+03.bmp中，可以看到`RgbFar`对于上方的那个目标不太敏感，但对于右下方目标十分敏感。相反，`RgbRare`对于上方目标很敏感，对于下方那个完全不行。
+![RgbFar](./out/03/01.jpg)
+![RgbRare](./out/03/02.jpg)
+
+在06.bmp中，`RgbRare`的有效度近乎为0：
+![RgbFar](./out/06/01.jpg)
+![RgbRare](./out/06/02.jpg)
+
+反之，在09.bmp中，`RgbFar`的有效度近乎为0：
+![RgbFar](./out/09/01.jpg)
+![RgbRare](./out/09/02.jpg)
+
+以上，经过这些对比可以得出，`RgbFar`与`RgbRare`经过一定比例的叠加，可以更为有效的描述目标
+
+`GroupNum`与`BlockRare`特征的表述能力对比：
+
+综合所有图片提取的特征的分析，可以发现，`GroupNum`得到的权重等高图普遍更为“干净”，但经常性的出现目标的部分乃至整体缺失。
+`BlockRare`得到的图噪点较多，但相对来说出现遗漏的情况也更少。这表明，`GroupNum`与`BlockRare`特征的比例调和，可以得到一个最佳的目标检测的中间值。
+
+下面以分类效果较好的`04.bmp`为例，展示具体效果：
+
+推导过程
+![推导过程](./screenshuts/推导过程.png)
+
+权重等高图：
+![权重等高图：](./out/04/result-weight.jpg)
+
+检测目标标示：
+![检测目标标示](./out/04/result-marked.jpg)
