@@ -36,7 +36,6 @@ class RgbFarFeature(Feature):
                 range(3), 0
             ) / 3)**0.5
         pix_iter(lambda xy, rgb: self.point(xy, distance(rgb)))
-        self.show()
 
 
 class RgbRareFeature(Feature):
@@ -64,4 +63,3 @@ class RgbRareFeature(Feature):
             index += 1
         pix_iter(lambda xy, rgb: self.point(
             xy, 255 * weight_map[rgb]))
-        self.show()
